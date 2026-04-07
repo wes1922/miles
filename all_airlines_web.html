@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Global Airlines Award Release Hub</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --primary: #f43f5e;
+      --primary-hover: #e11d48;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #facc15;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(250, 204, 21, 0.1) 0px, transparent 50%);
+    }
+    .container {
+      width: 90%;
+      max-width: 600px;
+      margin-top: 5vmin;
+      margin-bottom: 5vmin;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: #fff;
+    }
+    p {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .status-box {
+      margin: 1.5rem 0;
+      padding: 1.5rem;
+      background: rgba(250, 204, 21, 0.08);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+    }
+    .status-box p {
+      text-align: left;
+      margin: 0.4rem 0;
+      color: var(--text-main);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .status-box strong {
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    select, input[type="date"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 1rem;
+      font-size: 1.05rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-main);
+      color-scheme: dark;
+      transition: border-color 0.2s;
+    }
+    select:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn-calc {
+      margin-top: 2rem;
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .btn-calc:hover {
+      box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+    }
+    .btn-calc:active {
+      transform: scale(0.98);
+    }
+    .result-card {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      display: none;
+    }
+    pre {
+      font-family: inherit;
+      white-space: pre-wrap;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+    #ics-btn-container {
+      margin-top: 1.5rem;
+      display: none;
+    }
+    .btn-ics {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-ics:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🌍 全球航空常客計畫 哩程放票推算器</h1>
+    <p>統整全球 23 大航空，精準跨國時區自動轉換</p>
+
+    <label for="airline">選擇航空公司 / 哩程計畫</label>
+    <select id="airline" onchange="handleAirlineChange()"></select>
+
+    <div class="status-box" id="info-box" style="display: none;">
+      <p id="airline-info"></p>
+    </div>
+
+    <label for="departure">設定目標出發日期 (去程)</label>
+    <input type="date" id="departure" />
+    <button class="btn-calc" onclick="handleCalculate()">立即推算精確放票時間</button>
+
+    <div class="result-card" id="result-card">
+      <pre id="result-text"></pre>
+      <div id="ics-btn-container">
+        <button class="btn-ics" onclick="handleGenerateICS()">產生無時差行事曆提醒 (.ics檔)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 航空資料庫 (依照聯盟分類，並在同聯盟內依放票天數由長至短排序)
+    const airlines = [
+      // === 星空聯盟 (Star Alliance) ===
+      { alliance: "星空聯盟 (Star Alliance)", id: "oz", name: "Asiana Club", days: 361, tz: "Asia/Seoul", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "av", name: "Avianca Lifemiles", days: 360, tz: "America/Bogota", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "br", name: "EVA Air 長榮航空 (Infinity MileageLands)", days: 360, tz: "Asia/Taipei", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "lh", name: "Lufthansa Miles & More", days: 360, tz: "Europe/Berlin", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "ac", name: "Air Canada Aeroplan", days: 355, tz: "America/Toronto", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "nh", name: "All Nippon Airways (ANA)", days: 355, tz: "Asia/Tokyo", hour: 9, note: "實測發布為東京時間上午 9 點 (即台灣 8 點)。", icsDesc: "美日黃金航線經驗張數：\\n頭等艙：2張 (如SFO/ORD) 或 1-2張 (JFK)\\n商務艙：1-2張\\n經濟艙：2-4張" },
+      { alliance: "星空聯盟 (Star Alliance)", id: "sq", name: "Singapore Airlines KrisFlyer", days: 355, tz: "Asia/Singapore", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "ua", name: "United MileagePlus", days: 337, tz: "America/Chicago", hour: 0 },
+      
+      // === 天合聯盟 (SkyTeam) ===
+      { alliance: "天合聯盟 (SkyTeam)", id: "ci", name: "China Airlines 中華航空 (Dynasty Flyer)", days: 361, tz: "Asia/Taipei", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "ke", name: "Korean Air SkyPass", days: 361, tz: "Asia/Seoul", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "af", name: "Air France-KLM Flying Blue", days: 359, tz: "Europe/Paris", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "dl", name: "Delta SkyMiles", days: 331, tz: "America/New_York", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "vs", name: "Virgin Atlantic Flying Club", days: 331, tz: "Europe/London", hour: 0 },
+
+      // === 寰宇一家 (Oneworld) ===
+      { alliance: "寰宇一家 (Oneworld)", id: "ay", name: "Finnair Plus", days: 361, tz: "Europe/Helsinki", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "qr", name: "Qatar Airways Privilege Club", days: 361, tz: "Asia/Qatar", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "cx", name: "Cathay Pacific Asia Miles", days: 360, tz: "Asia/Hong_Kong", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "jl", name: "Japan Airlines Mileage Bank", days: 360, tz: "Asia/Tokyo", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "ba", name: "British Airways Executive Club", days: 355, tz: "Europe/London", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "qf", name: "Qantas Frequent Flyer", days: 353, tz: "Australia/Sydney", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "as", name: "Alaska Mileage Plan", days: 331, tz: "America/Los_Angeles", hour: 0, note: "文章備註原330天，嚴格推算互換為331天" },
+      { alliance: "寰宇一家 (Oneworld)", id: "aa", name: "American AAdvantage", days: 331, tz: "America/Chicago", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "ib", name: "Iberia Plus", days: 330, tz: "Europe/Madrid", hour: 0 },
+
+      // === 獨立 / 其他 (Non-Alliance) ===
+      { alliance: "獨立計畫 / 其他", id: "jx", name: "Starlux Airlines 星宇航空 (COSMILE)", days: 360, tz: "Asia/Taipei", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ey", name: "Etihad Guest", days: 330, tz: "Asia/Dubai", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ha", name: "Hawaiian Airlines", days: 330, tz: "Pacific/Honolulu", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ek", name: "Emirates Skywards", days: 328, tz: "Asia/Dubai", hour: 0 }
+    ];
+
+    function pad(num) { return String(num).padStart(2, '0'); }
+
+    // 核心演算法：根據指定的總部時區與釋出時刻(Hour)，取得該時區某年某月的時間轉換為跨時區絕對的 JS Local Date。
+    function getTZTime(year, monthIndex, day, timeZone, targetHour) {
+      let guess = new Date(Date.UTC(year, monthIndex, day, 12, 0, 0));
+      let parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone, 
+        timeZoneName: 'longOffset',
+      }).formatToParts(guess);
+      
+      let tzOffsetStr = parts.find(p => p.type === 'timeZoneName').value;
+      
+      let offsetHours = 0;
+      let offsetMinutes = 0;
+      if (tzOffsetStr !== "GMT") {
+         const match = tzOffsetStr.match(/GMT([+-])(\d+):(\d+)/);
+         if (match) {
+            let sign = match[1] === '-' ? -1 : 1;
+            offsetHours = parseInt(match[2], 10) * sign;
+            offsetMinutes = parseInt(match[3], 10) * sign;
+         }
+      }
+      return new Date(Date.UTC(year, monthIndex, day, targetHour - offsetHours, -offsetMinutes, 0));
+    }
+
+    function formatToYMDHMS(d, tz) {
+      const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      if(tz) options.timeZone = tz;
+      let s = new Intl.DateTimeFormat('en-CA', options).format(d);
+      s = s.replace(',', '');
+      if(s.includes(' 24:')) s = s.replace(' 24:', ' 00:');
+      return s;
+    }
+
+    window.onload = function() {
+      const sel = document.getElementById('airline');
+      let html = '<option value="" disabled selected>請選擇一家航空...</option>';
+      let currentAlliance = "";
+      airlines.forEach((al, index) => {
+        if (al.alliance !== currentAlliance) {
+          if (currentAlliance !== "") html += `</optgroup>`;
+          currentAlliance = al.alliance;
+          html += `<optgroup label="${currentAlliance}">`;
+        }
+        html += `<option value="${index}">${al.name} (${al.days} 天)</option>`;
+      });
+      if (currentAlliance !== "") html += `</optgroup>`;
+      sel.innerHTML = html;
+    };
+
+    function handleAirlineChange() {
+      const idx = document.getElementById('airline').value;
+      if(idx === "") return;
+      const al = airlines[idx];
+      const infoEl = document.getElementById('airline-info');
+      
+      let noteHtml = al.note ? `<br/><span style="font-size:0.85em;color:var(--text-muted);">ℹ️ 備註：${al.note}</span>` : '';
+
+      // 動態推算目前最新放票狀態
+      let tzDateStr = new Date().toLocaleString('en-US', {timeZone: al.tz});
+      let ptDate = new Date(tzDateStr);
+      let hqYear = ptDate.getFullYear();
+      let hqMonth = ptDate.getMonth();
+      let hqDay = ptDate.getDate();
+      
+      let targetHour = al.hour || 0;
+      let todaysReleaseAbs = getTZTime(hqYear, hqMonth, hqDay, al.tz, targetHour);
+      
+      let latestReleaseBaseDay, nextReleaseBaseDay, nextReleaseAbs;
+      if (Date.now() >= todaysReleaseAbs.getTime()) {
+        latestReleaseBaseDay = new Date(hqYear, hqMonth, hqDay);
+        nextReleaseBaseDay = new Date(hqYear, hqMonth, hqDay + 1);
+        nextReleaseAbs = getTZTime(hqYear, hqMonth, hqDay + 1, al.tz, targetHour);
+      } else {
+        latestReleaseBaseDay = new Date(hqYear, hqMonth, hqDay - 1);
+        nextReleaseBaseDay = new Date(hqYear, hqMonth, hqDay);
+        nextReleaseAbs = todaysReleaseAbs;
+      }
+      
+      let bookableFlight = new Date(latestReleaseBaseDay);
+      bookableFlight.setDate(bookableFlight.getDate() + al.days);
+      
+      let nextBatchFlight = new Date(nextReleaseBaseDay);
+      nextBatchFlight.setDate(nextBatchFlight.getDate() + al.days);
+      
+      let nextTwStr = formatToYMDHMS(nextReleaseAbs, 'Asia/Taipei');
+      let nextLocalStr = formatToYMDHMS(nextReleaseAbs);
+
+      // 取得當地季節對應的時區縮寫 (如 PDT, PST, CEST 等)
+      let shortTzParts = new Intl.DateTimeFormat('en-US', {timeZone: al.tz, timeZoneName: 'short'}).formatToParts(nextReleaseAbs);
+      let shortTzStr = shortTzParts.find(p => p.type === 'timeZoneName')?.value || al.tz.split('/')[1];
+
+      infoEl.innerHTML = `
+        <strong>${al.name}</strong><br/>
+        總部系統放票基準：提前 <strong>${al.days}</strong> 天<br/>
+        系統換算時區範圍：<strong>${al.tz.replace('_', ' ')}</strong> 當地 <strong>${pad(targetHour)}:00</strong> (目前當地季節為 ${shortTzStr})
+        ${noteHtml}
+
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            👉 以此刻而言，最遠可預訂機票：<br/>
+            <strong>${bookableFlight.getFullYear()}-${pad(bookableFlight.getMonth()+1)}-${pad(bookableFlight.getDate())}</strong><br/><br/>
+            <span style="color:var(--text-muted); font-size: 0.9em;">(下波將在 台灣時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} 的機票，此時會符合總部設定時機)</span>
+        </div>
+      `;
+      document.getElementById('info-box').style.display = 'block';
+      document.getElementById('result-card').style.display = 'none';
+    }
+
+    let globalConfig = null;
+
+    function handleCalculate() {
+      const idx = document.getElementById('airline').value;
+      const departureVal = document.getElementById('departure').value;
+      if(idx === "" || !departureVal) {
+        alert("請確認已選擇航空公司並填寫目標出發日期！");
+        return;
+      }
+      
+      const al = airlines[idx];
+      const [year, month, day] = departureVal.split('-');
+      
+      // 退算 X 天
+      const releaseDate = new Date(year, parseInt(month) - 1, day);
+      releaseDate.setDate(releaseDate.getDate() - al.days);
+      
+      const rYear = releaseDate.getFullYear();
+      const rMonth = releaseDate.getMonth();
+      const rDay = releaseDate.getDate();
+      
+      // 計算放票地時區的目標放票時刻代表的絕對時間
+      const absoluteRelease = getTZTime(rYear, rMonth, rDay, al.tz, al.hour || 0);
+      
+      // 計算「總地時間字串」
+      const prevLocalDay = new Date(releaseDate);
+      if ((al.hour || 0) === 0) {
+        prevLocalDay.setDate(releaseDate.getDate() - 1);
+        var hqStr = `${prevLocalDay.getFullYear()}-${pad(prevLocalDay.getMonth()+1)}-${pad(prevLocalDay.getDate())} 23:59:59 (即 ${rYear}-${pad(rMonth+1)}-${pad(rDay)} 凌晨 00:00)`;
+      } else {
+        var hqStr = `${rYear}-${pad(rMonth+1)}-${pad(rDay)} 當地時間 ${pad(al.hour)}:00 整`;
+      }
+
+      const twStr = formatToYMDHMS(absoluteRelease, 'Asia/Taipei');
+      const localStr = formatToYMDHMS(absoluteRelease);
+
+      globalConfig = { departureVal, absoluteRelease, al, releaseDate };
+
+      const resBox = document.getElementById('result-card');
+      const resText = document.getElementById('result-text');
+      const btnContainer = document.getElementById('ics-btn-container');
+
+      resText.innerText = `--------------------------------------------------
+🎯 目標出發日期: ${departureVal}
+--------------------------------------------------
+📍 ${al.tz.split('/')[1].replace('_',' ')} 當地 (HQ): 
+   ${hqStr}
+📍 換算 台灣時間 (TW): 
+   ${twStr}
+📍 換算 您的電腦時間: 
+   ${localStr} (您目前的系統時區)`;
+
+      resBox.style.display = 'block';
+      setTimeout(() => { btnContainer.style.display = 'block'; }, 200);
+    }
+
+    function handleGenerateICS() {
+      if (!globalConfig) return;
+      const { departureVal, absoluteRelease, al } = globalConfig;
+      
+      // 直接打包 Absolute UTC 給 ICS，完美解開全世界時區夏令冬令干擾
+      // Google/Apple Calendar 會收到 UTC，並在用戶手機上自動呈現絕對標準的響鈴時間！
+      const dtStart = absoluteRelease.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const dtEnd = new Date(absoluteRelease.getTime() + 30*60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const nowUtc = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const uid = Math.random().toString(36).substring(2) + "@" + al.id + ".reminder";
+
+      const icsString = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Airlines Award//Web//
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${nowUtc}
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+SUMMARY:搶 ${al.name} 機票 (${departureVal})
+DESCRIPTION:準備搶 ${al.name} (${al.tz}) 遠期機票\\n\\n起飛日期: ${departureVal}
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:準點即將放票！(15分鐘後機票釋出)
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `award_${al.id}_${departureVal.replace(/-/g, '')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
