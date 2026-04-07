@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alaska Booking Window</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #10b981;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+    }
+    .container {
+      width: 90%;
+      max-width: 500px;
+      margin-top: 5vmin;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: var(--primary);
+    }
+    p {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .status-box {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+    }
+    .status-box p {
+      text-align: left;
+      margin: 0.4rem 0;
+      color: var(--text-main);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .status-box strong {
+      color: var(--accent);
+      font-size: 1.1rem;
+      display: block;
+      margin-top: 5px;
+    }
+    label {
+      display: block;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    input[type="date"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 1rem;
+      font-size: 1.1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-main);
+      color-scheme: dark;
+      transition: border-color 0.2s;
+    }
+    input[type="date"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn-calc {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-calc:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .result-card {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: none;
+    }
+    pre {
+      font-family: inherit;
+      white-space: pre-wrap;
+      color: var(--text-main);
+      font-size: 1rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+    #ics-btn-container {
+      margin-top: 1.5rem;
+      display: none;
+    }
+    .btn-ics {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .btn-ics:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>✈️ Alaska Booking Window</h1>
+
+    <div class="status-box">
+      <p id="system-info">正在撈取系統動態偵測...</p>
+    </div>
+
+    <label for="departure">設定目標出發日期 (去程)</label>
+    <input type="date" id="departure" />
+    <button class="btn-calc" onclick="handleCalculate()">開始推算放票時間</button>
+
+    <div class="result-card" id="result-card">
+      <pre id="result-text"></pre>
+      <div id="ics-btn-container">
+        <button class="btn-ics" onclick="handleGenerateICS()">是不是要產生手機/電腦用行事曆提醒 (ICS檔)？</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function pad(num) { return String(num).padStart(2, '0'); }
+
+    // 取得指定日期的美國西岸(PT)零點整對應的JS Local Date物件
+    function getPTMidnight(year, monthIndex, day) {
+      // 假設夏令時間 PDT (UTC-7)
+      const d7 = new Date(Date.UTC(year, monthIndex, day, 7, 0, 0));
+      const f7 = d7.toLocaleString('en-US', {timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: true});
+      // 檢查是否為 12 AM (不管其前後的空格)
+      if (f7.match(/12\s*AM/i)) return d7;
+      // 否則為冬令時間 PST (UTC-8)
+      return new Date(Date.UTC(year, monthIndex, day, 8, 0, 0));
+    }
+
+    function formatToYMDHMS(d, tz) {
+      const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      if(tz) options.timeZone = tz;
+      // 'en-CA' 輸出格式會像 "2026-05-06, 15:00:00"
+      let s = new Intl.DateTimeFormat('en-CA', options).format(d);
+      s = s.replace(',', '');
+      if(s.includes(' 24:')) s = s.replace(' 24:', ' 00:');
+      return s;
+    }
+
+    function initStats() {
+      const infoEl = document.getElementById('system-info');
+      
+      const now = new Date();
+      // 取出現在洛杉磯時間
+      const ptDateStr = now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
+      const ptDate = new Date(ptDateStr);
+      
+      // 洛杉磯最新一次放票是當下的今天 00:00:00
+      const ptYear = ptDate.getFullYear();
+      const ptMonth = ptDate.getMonth();
+      const ptDay = ptDate.getDate();
+
+      // 計算最新可飛航班
+      const bookableFlight = new Date(ptYear, ptMonth, ptDay);
+      bookableFlight.setDate(bookableFlight.getDate() + 331);
+      
+      const nextBatchFlight = new Date(bookableFlight);
+      nextBatchFlight.setDate(bookableFlight.getDate() + 1);
+
+      // 下次放票對應到的當地時間（也就是明天的美西零點）
+      const nextReleaseLocalJS = getPTMidnight(ptYear, ptMonth, ptDay + 1);
+      
+      const nextTwStr = formatToYMDHMS(nextReleaseLocalJS); // 本機時區 (符合：你的當地時間 ....)
+
+      infoEl.innerHTML = `
+以此刻而言，最遠可預訂機票：<br/>
+<strong>${bookableFlight.getFullYear()}-${pad(bookableFlight.getMonth()+1)}-${pad(bookableFlight.getDate())}</strong><br/>
+目前放票固定為：美西時間 每日凌晨 00:00<br/>
+<span style="font-size: 0.9em; color: var(--text-muted);">（對應台灣時間：夏令 PDT 為 15:00 / 冬令 PST 為 16:00）</span><br/>
+<span style="color:var(--text-muted); font-size: 0.9em;">(下波將在 你的當地時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} 的機票)</span>
+      `;
+    }
+
+    let globalDeparture = "";
+
+    function handleCalculate() {
+      const departureVal = document.getElementById('departure').value;
+      if (!departureVal) {
+        alert("請選擇起飛日期！");
+        return;
+      }
+      globalDeparture = departureVal;
+
+      const [year, month, day] = departureVal.split('-');
+      
+      const releaseDate = new Date(year, parseInt(month) - 1, day);
+      releaseDate.setDate(releaseDate.getDate() - 331);
+      
+      const rYear = releaseDate.getFullYear();
+      const rMonth = pad(releaseDate.getMonth() + 1);
+      const rDay = pad(releaseDate.getDate());
+      
+      // 取出精準的 Javascript 此刻時間物件
+      const absoluteRelease = getPTMidnight(releaseDate.getFullYear(), releaseDate.getMonth(), releaseDate.getDate());
+      
+      // 推算美西字串 (扣一秒來呈現 23:59:59)
+      const prevPTDay = new Date(releaseDate);
+      prevPTDay.setDate(releaseDate.getDate() - 1);
+      const ptStr = `${prevPTDay.getFullYear()}-${pad(prevPTDay.getMonth()+1)}-${pad(prevPTDay.getDate())} 23:59:59 (即 ${rYear}-${rMonth}-${rDay} 凌晨 00:00)`;
+      
+      const twStr = formatToYMDHMS(absoluteRelease, 'Asia/Taipei');
+      const localStr = formatToYMDHMS(absoluteRelease);
+
+      const resBox = document.getElementById('result-card');
+      const resText = document.getElementById('result-text');
+      const btnContainer = document.getElementById('ics-btn-container');
+
+      resText.innerText = `--------------------------------------------------
+🎯 目標出發日期: ${departureVal}
+--------------------------------------------------
+📍 美西時間 (PT): ${ptStr}
+📍 台灣時間 (TW): ${twStr}
+📍 您的當地時間:   ${localStr} (目前電腦時區)`;
+
+      resBox.style.display = 'block';
+      // 小心機：稍微延遲讓按鈕跳出，營造順暢感
+      setTimeout(() => {
+        btnContainer.style.display = 'block';
+      }, 300);
+    }
+
+    function handleGenerateICS() {
+      if (!globalDeparture) return;
+      const [year, month, day] = globalDeparture.split('-');
+      
+      const releaseDate = new Date(year, parseInt(month) - 1, day);
+      releaseDate.setDate(releaseDate.getDate() - 331);
+      
+      const rYear = releaseDate.getFullYear();
+      const rMonth = pad(releaseDate.getMonth() + 1);
+      const rDay = pad(releaseDate.getDate());
+      
+      const dtStart = `${rYear}${rMonth}${rDay}T000000`;
+      const dtEnd = `${rYear}${rMonth}${rDay}T003000`;
+      const nowUtc = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const uid = Math.random().toString(36).substring(2) + "@alaska.reminder";
+
+      const icsString = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Alaska Award Reminder//Web//
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${nowUtc}
+DTSTART;TZID=America/Los_Angeles:${dtStart}
+DTEND;TZID=America/Los_Angeles:${dtEnd}
+SUMMARY:搶阿拉斯加機票 (${globalDeparture})
+DESCRIPTION:準備搶阿拉斯加航空長程機票\\n\\n起飛日期: ${globalDeparture}\\n\\n依經驗：\\n經濟艙 9張 | 豪經艙 2張 | 商務艙 2張
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:準點！(15分鐘後機票釋出)
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `alaska_award_${year}${month}${day}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    window.onload = initStats;
+  </script>
+</body>
+</html>
