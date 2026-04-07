@@ -156,7 +156,7 @@
 
   <div class="container">
     <h1>🌍 全球航空常客計畫 哩程放票推算器</h1>
-    <p>統整全球 23 大航空，精準跨國時區自動轉換</p>
+    <p>統整全球各大航空，精準跨國時區自動轉換</p>
 
     <label for="airline">選擇航空公司 / 哩程計畫</label>
     <select id="airline" onchange="handleAirlineChange()"></select>
@@ -184,16 +184,16 @@
       { alliance: "星空聯盟 (Star Alliance)", id: "oz", name: "Asiana Club", days: 361, tz: "Asia/Seoul", hour: 0 },
       { alliance: "星空聯盟 (Star Alliance)", id: "av", name: "Avianca Lifemiles", days: 360, tz: "America/Bogota", hour: 0 },
       { alliance: "星空聯盟 (Star Alliance)", id: "br", name: "EVA Air 長榮航空 (Infinity MileageLands)", days: 360, tz: "Asia/Taipei", hour: 0 },
-      { alliance: "星空聯盟 (Star Alliance)", id: "lh", name: "Lufthansa Miles & More", days: 360, tz: "Europe/Berlin", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "lh", name: "Lufthansa Miles & More", days: 360, tz: "Europe/Berlin", hour: 0, note: "只會在出發日前 15 日之內，釋出頭等艙哩程機位給予夥伴航空計畫兌換。" },
       { alliance: "星空聯盟 (Star Alliance)", id: "ac", name: "Air Canada Aeroplan", days: 355, tz: "America/Toronto", hour: 0 },
       { alliance: "星空聯盟 (Star Alliance)", id: "nh", name: "All Nippon Airways (ANA)", days: 355, tz: "Asia/Tokyo", hour: 9, note: "實測發布為東京時間上午 9 點 (即台灣 8 點)。", icsDesc: "美日黃金航線經驗張數：\\n頭等艙：2張 (如SFO/ORD) 或 1-2張 (JFK)\\n商務艙：1-2張\\n經濟艙：2-4張" },
-      { alliance: "星空聯盟 (Star Alliance)", id: "sq", name: "Singapore Airlines KrisFlyer", days: 355, tz: "Asia/Singapore", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "sq", name: "Singapore Airlines KrisFlyer", days: 355, tz: "Asia/Singapore", hour: 0, note: "通常釋出絕大部分的長程航線商務/頭等艙給自家計畫會員兌換，多數情形下無法透過夥伴航空兌換。" },
       { alliance: "星空聯盟 (Star Alliance)", id: "ua", name: "United MileagePlus", days: 337, tz: "America/Chicago", hour: 0 },
       
       // === 天合聯盟 (SkyTeam) ===
       { alliance: "天合聯盟 (SkyTeam)", id: "ci", name: "China Airlines 中華航空 (Dynasty Flyer)", days: 361, tz: "Asia/Taipei", hour: 0 },
       { alliance: "天合聯盟 (SkyTeam)", id: "ke", name: "Korean Air SkyPass", days: 361, tz: "Asia/Seoul", hour: 0 },
-      { alliance: "天合聯盟 (SkyTeam)", id: "af", name: "Air France-KLM Flying Blue", days: 359, tz: "Europe/Paris", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "af", name: "Air France-KLM Flying Blue", days: 359, tz: "Europe/Paris", hour: 0, note: "通常釋出較多的哩程機位，優先保留給自家的「藍天飛行計劃」(Flying Blue) 會員。" },
       { alliance: "天合聯盟 (SkyTeam)", id: "dl", name: "Delta SkyMiles", days: 331, tz: "America/New_York", hour: 0 },
       { alliance: "天合聯盟 (SkyTeam)", id: "vs", name: "Virgin Atlantic Flying Club", days: 331, tz: "Europe/London", hour: 0 },
 
@@ -201,10 +201,10 @@
       { alliance: "寰宇一家 (Oneworld)", id: "ay", name: "Finnair Plus", days: 361, tz: "Europe/Helsinki", hour: 0 },
       { alliance: "寰宇一家 (Oneworld)", id: "qr", name: "Qatar Airways Privilege Club", days: 361, tz: "Asia/Qatar", hour: 0 },
       { alliance: "寰宇一家 (Oneworld)", id: "cx", name: "Cathay Pacific Asia Miles", days: 360, tz: "Asia/Hong_Kong", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "jl", name: "Japan Airlines Mileage Bank", days: 360, tz: "Asia/Tokyo", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "jl", name: "Japan Airlines Mileage Bank (JAL)", days: 360, tz: "Asia/Tokyo", hour: 10, note: "放票時間：每日日本時間 10:00 (台灣 09:00)。<br/><br/>[頭等/商務規律]<br/>- 提前 >354 天：原則固定釋出 1 個頭等艙機位。<br/>- 提前 46~353 天：頭等艙每 14 天出現一次。<br/>- 離出發兩週內：釋出所有剩餘里程機位 (頭等甚至高達7個)。<br/><br/>[預訂截止時間]<br/>網站需 48H 前完成；電話需 24H 前完成。" },
       { alliance: "寰宇一家 (Oneworld)", id: "ba", name: "British Airways Executive Club", days: 355, tz: "Europe/London", hour: 0 },
       { alliance: "寰宇一家 (Oneworld)", id: "qf", name: "Qantas Frequent Flyer", days: 353, tz: "Australia/Sydney", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "as", name: "Alaska Mileage Plan", days: 331, tz: "America/Los_Angeles", hour: 0, note: "文章備註原330天，嚴格推算互換為331天" },
+      { alliance: "寰宇一家 (Oneworld)", id: "as", name: "Alaska Mileage Plan", days: 331, tz: "America/Los_Angeles", hour: 0, note: "備註：原330天，嚴格推算互換為331天" },
       { alliance: "寰宇一家 (Oneworld)", id: "aa", name: "American AAdvantage", days: 331, tz: "America/Chicago", hour: 0 },
       { alliance: "寰宇一家 (Oneworld)", id: "ib", name: "Iberia Plus", days: 330, tz: "Europe/Madrid", hour: 0 },
 
@@ -212,7 +212,7 @@
       { alliance: "獨立計畫 / 其他", id: "jx", name: "Starlux Airlines 星宇航空 (COSMILE)", days: 360, tz: "Asia/Taipei", hour: 0 },
       { alliance: "獨立計畫 / 其他", id: "ey", name: "Etihad Guest", days: 330, tz: "Asia/Dubai", hour: 0 },
       { alliance: "獨立計畫 / 其他", id: "ha", name: "Hawaiian Airlines", days: 330, tz: "Pacific/Honolulu", hour: 0 },
-      { alliance: "獨立計畫 / 其他", id: "ek", name: "Emirates Skywards", days: 328, tz: "Asia/Dubai", hour: 0 }
+      { alliance: "獨立計畫 / 其他", id: "ek", name: "Emirates Skywards", days: 328, tz: "Asia/Dubai", hour: 0, note: "並不會釋出頭等艙哩程機位給予除了澳洲航空 (Qantas) 以外的合作夥伴航空，透過自家哩程計畫兌換機會最高。" }
     ];
 
     function pad(num) { return String(num).padStart(2, '0'); }
@@ -271,7 +271,7 @@
       const al = airlines[idx];
       const infoEl = document.getElementById('airline-info');
       
-      let noteHtml = al.note ? `<br/><span style="font-size:0.85em;color:var(--text-muted);">ℹ️ 備註：${al.note}</span>` : '';
+      let noteHtml = al.note ? `<div style="margin-top:1.5rem;font-size:0.95em;color:#fcd34d;background:rgba(255,255,255,0.05);padding:1rem;border-radius:12px;line-height:1.6;"><strong>💡 深度經驗與機位規律</strong><br/>${al.note}</div>` : '';
 
       // 動態推算目前最新放票狀態
       let tzDateStr = new Date().toLocaleString('en-US', {timeZone: al.tz});
@@ -311,13 +311,14 @@
         <strong>${al.name}</strong><br/>
         總部系統放票基準：提前 <strong>${al.days}</strong> 天<br/>
         系統換算時區範圍：<strong>${al.tz.replace('_', ' ')}</strong> 當地 <strong>${pad(targetHour)}:00</strong> (目前當地季節為 ${shortTzStr})
-        ${noteHtml}
-
+        
         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
             👉 以此刻而言，最遠可預訂機票：<br/>
             <strong>${bookableFlight.getFullYear()}-${pad(bookableFlight.getMonth()+1)}-${pad(bookableFlight.getDate())}</strong><br/><br/>
-            <span style="color:var(--text-muted); font-size: 0.9em;">(下波將在 台灣時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} 的機票，此時會符合總部設定時機)</span>
+            <span style="color:var(--text-muted); font-size: 0.9em;">(下波將在 台灣時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} 的機票)</span>
         </div>
+
+        ${noteHtml}
       `;
       document.getElementById('info-box').style.display = 'block';
       document.getElementById('result-card').style.display = 'none';
@@ -347,11 +348,11 @@
       // 計算放票地時區的目標放票時刻代表的絕對時間
       const absoluteRelease = getTZTime(rYear, rMonth, rDay, al.tz, al.hour || 0);
       
-      // 計算「總地時間字串」
+      // 計算「總部地時間字串」
       const prevLocalDay = new Date(releaseDate);
       if ((al.hour || 0) === 0) {
         prevLocalDay.setDate(releaseDate.getDate() - 1);
-        var hqStr = `${prevLocalDay.getFullYear()}-${pad(prevLocalDay.getMonth()+1)}-${pad(prevLocalDay.getDate())} 23:59:59 (即 ${rYear}-${pad(rMonth+1)}-${pad(rDay)} 凌晨 00:00)`;
+        var hqStr = `${prevLocalDay.getFullYear()}-${pad(prevLocalDay.getMonth()+1)}-${pad(prevLocalDay.getDate())} 23:59:59\\n   (即 ${rYear}-${pad(rMonth+1)}-${pad(rDay)} 凌晨 00:00)`;
       } else {
         var hqStr = `${rYear}-${pad(rMonth+1)}-${pad(rDay)} 當地時間 ${pad(al.hour)}:00 整`;
       }
@@ -383,12 +384,18 @@
       if (!globalConfig) return;
       const { departureVal, absoluteRelease, al } = globalConfig;
       
-      // 直接打包 Absolute UTC 給 ICS，完美解開全世界時區夏令冬令干擾
-      // Google/Apple Calendar 會收到 UTC，並在用戶手機上自動呈現絕對標準的響鈴時間！
       const dtStart = absoluteRelease.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
       const dtEnd = new Date(absoluteRelease.getTime() + 30*60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
       const nowUtc = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
       const uid = Math.random().toString(36).substring(2) + "@" + al.id + ".reminder";
+
+      let descLines = al.icsDesc ? al.icsDesc : `依經驗各熱門艙等數量有限，請準時搶票。`;
+      if (al.note && !al.icsDesc) {
+        // 如果沒有特製 icsDesc，就帶入 note 的純文字版 (拔掉HTML標籤)
+        descLines = al.note.replace(/<br\/>/g, '\\n').replace(/<[^>]*>?/gm, '');
+      } else if (al.icsDesc) {
+        descLines = al.icsDesc;
+      }
 
       const icsString = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -400,7 +407,7 @@ DTSTAMP:${nowUtc}
 DTSTART:${dtStart}
 DTEND:${dtEnd}
 SUMMARY:搶 ${al.name} 機票 (${departureVal})
-DESCRIPTION:準備搶 ${al.name} (${al.tz}) 遠期機票\\n\\n起飛日期: ${departureVal}
+DESCRIPTION:準備搶 ${al.name} (${al.tz}) 遠期機票\\n\\n起飛日期: ${departureVal}\\n\\n機位資訊與規律：\\n${descLines}
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
