@@ -52,24 +52,31 @@
       color: var(--text-muted);
       font-size: 0.95rem;
       line-height: 1.5;
+      margin-bottom: 2rem;
     }
-    .status-box {
+    .version-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+    .status-container {
       margin: 1.5rem 0;
-      padding: 1.5rem;
-      background: rgba(250, 204, 21, 0.08);
+      display: none;
+    }
+    .status-title-box {
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(245, 158, 11, 0.1));
       border-left: 4px solid var(--accent);
-      border-radius: 8px;
-    }
-    .status-box p {
-      text-align: left;
-      margin: 0.4rem 0;
-      color: var(--text-main);
-      font-size: 1rem;
-      line-height: 1.6;
-    }
-    .status-box strong {
-      color: var(--accent);
-      font-size: 1.1rem;
+      border-radius: 10px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
     label {
       display: block;
@@ -131,16 +138,6 @@
       line-height: 1.6;
       margin: 0;
     }
-    .route-block {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px dashed rgba(255,255,255,0.2);
-    }
-    .route-block:first-child {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: none;
-    }
     .btn-ics {
       margin-top: 1rem;
       width: 100%;
@@ -155,7 +152,13 @@
       transition: background 0.2s;
     }
     .btn-ics:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .footer-note {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #475569;
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -163,70 +166,71 @@
 
   <div class="container">
     <h1>🌍 全球航空常客計畫 哩程放票推算器</h1>
+    <div style="text-align: center;"><span class="version-tag">最新版本：v3.3 (Card-Based UI Engine)</span></div>
     <p>統整全球各大航空，精準跨國時區自動轉換</p>
 
     <label for="airline">選擇航空公司 / 哩程計畫</label>
     <select id="airline" onchange="handleAirlineChange()"></select>
 
-    <div class="status-box" id="info-box" style="display: none;"></div>
+    <div class="status-container" id="info-box"></div>
 
-    <label for="departure">設定目標出發日期 (去程)</label>
+    <label for="departure" style="margin-top: 2rem;">設定目標出發日期 (去程)</label>
     <input type="date" id="departure" />
     <button class="btn-calc" onclick="handleCalculate()">立即推算精確放票時間</button>
 
     <div class="result-card" id="result-card"></div>
+    
+    <div class="footer-note">
+      Build 2026.04.08 | Global Airlines Database Engine v3.3
+    </div>
   </div>
 
   <script>
-    // 全面轉換為支援「自家航班(Own)」與「夥伴航空(Partner)」的雙軌引擎
-    // 若 confirmed 狀態不同，引擎亦會自動判定需拆分顯示。
     const airlines = [
       // === 星空聯盟 (Star Alliance) ===
-      { alliance: "星空聯盟 (Star Alliance)", id: "br", name: "EVA Air 長榮航空 (Infinity MileageLands)", days: 360, tz: "Asia/Taipei", hour: 8, confirmed: true },
-      { alliance: "星空聯盟 (Star Alliance)", id: "oz", name: "Asiana Club", days: 361, tz: "Asia/Seoul", hour: 0 },
-      { alliance: "星空聯盟 (Star Alliance)", id: "av", name: "Avianca Lifemiles", days: 360, tz: "UTC", hour: 0, note: "自家放票時間為每天 UTC 00:00。" },
-      { alliance: "星空聯盟 (Star Alliance)", id: "lh", name: "Lufthansa Miles & More", days: 360, tz: "Europe/Berlin", hour: 0, note: "只會在出發日前 15 日之內，釋出頭等艙哩程機位給予夥伴航空計畫兌換。" },
-      { alliance: "星空聯盟 (Star Alliance)", id: "ac", name: "Air Canada Aeroplan", days: 355, tz: "America/Toronto", hour: 0 },
-      { alliance: "星空聯盟 (Star Alliance)", id: "nh", name: "All Nippon Airways (ANA)", days: 355, tz: "Asia/Tokyo", hour: 9, confirmed: false,
-        partnerDays: 356, partnerHour: 0, partnerConfirmed: false,
-        note: "ANA 自家執飛與聯盟夥伴航空的開放天數不同。如果搜尋發現日期推算更前面，通常是看到聯盟夥伴航空的位置。", 
+      { alliance: "星空聯盟 (Star Alliance)", id: "br", name: "EVA Air 長榮航空 (Infinity MileageLands)", days: 360, confirmed: true, partnerConfirmed: false, tz: "Asia/Taipei", hour: 8 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "oz", name: "Asiana Club", days: 361, confirmed: false, partnerConfirmed: false, tz: "Asia/Seoul", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "av", name: "Avianca Lifemiles", days: 360, confirmed: false, partnerConfirmed: false, tz: "UTC", hour: 0, note: "推算邏輯：通常為每天 UTC 00:00。" },
+      { alliance: "星空聯盟 (Star Alliance)", id: "lh", name: "Lufthansa Miles & More", days: 360, confirmed: false, partnerConfirmed: false, tz: "Europe/Berlin", hour: 0, note: "只會在出發日前 15 日之內，釋出頭等艙哩程機位給予夥伴航空計畫兌換。" },
+      { alliance: "星空聯盟 (Star Alliance)", id: "ac", name: "Air Canada Aeroplan", days: 355, confirmed: false, partnerConfirmed: false, tz: "America/Toronto", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "nh", name: "All Nippon Airways (ANA)", days: 355, confirmed: false, partnerDays: 356, partnerConfirmed: true, tz: "Asia/Tokyo", hour: 9, 
+        note: "ANA 自家與外家夥伴的放票基準日有別。\n另請注意：每家外家航空能看到的遠期日期不一定相同。", 
         icsDesc: "ANA 經驗張數：\\n頭等艙：2張 (如SFO/ORD) 或 1-2張(JFK)\\n商務艙：1-2張\\n經濟艙：2-4張"
       },
-      { alliance: "星空聯盟 (Star Alliance)", id: "sq", name: "Singapore Airlines KrisFlyer", days: 355, tz: "Asia/Singapore", hour: 8, 
-        note: "例外提醒：美國出發回新加坡航班會依美國當地午夜釋出(如EST及PST會影響幾個小時的偏移)。<br/><br/>長程商務/頭等幾乎僅限自家會員兌換。"
+      { alliance: "星空聯盟 (Star Alliance)", id: "sq", name: "Singapore Airlines KrisFlyer", days: 355, confirmed: false, partnerConfirmed: false, tz: "Asia/Singapore", hour: 8, 
+        note: "例外提醒：美國出發回新加坡航班會依美國當地午夜釋出(如EST及PST會影響幾個小時的偏移)。<br/>長程商務/頭等幾乎僅限自家會員兌換。"
       },
-      { alliance: "星空聯盟 (Star Alliance)", id: "ua", name: "United MileagePlus", days: 337, tz: "America/Chicago", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "ua", name: "United MileagePlus", days: 337, confirmed: false, partnerConfirmed: false, tz: "America/Chicago", hour: 0 },
       
       // === 天合聯盟 (SkyTeam) ===
-      { alliance: "天合聯盟 (SkyTeam)", id: "ci", name: "China Airlines 中華航空 (Dynasty Flyer)", days: 361, tz: "Asia/Taipei", hour: 8, confirmed: true },
-      { alliance: "天合聯盟 (SkyTeam)", id: "ke", name: "Korean Air SkyPass", days: 361, tz: "Asia/Seoul", hour: 0 },
-      { alliance: "天合聯盟 (SkyTeam)", id: "af", name: "Air France-KLM Flying Blue", days: 359, tz: "Europe/Paris", hour: 0, note: "放票時間：巴黎當地 00:00。<br/>通常釋出較多機位，優先保留給自家的「藍天飛行計劃」(Flying Blue) 會員。" },
-      { alliance: "天合聯盟 (SkyTeam)", id: "dl", name: "Delta SkyMiles", days: 331, tz: "America/New_York", hour: 0 },
-      { alliance: "天合聯盟 (SkyTeam)", id: "vs", name: "Virgin Atlantic Flying Club", days: 331, tz: "Europe/London", hour: 5, note: "放票時間：英國時間 (GMT/BST) 凌晨 05:00 釋出。" },
+      { alliance: "天合聯盟 (SkyTeam)", id: "ci", name: "China Airlines 中華航空 (Dynasty Flyer)", days: 361, confirmed: true, partnerConfirmed: false, tz: "Asia/Taipei", hour: 8 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "ke", name: "Korean Air SkyPass", days: 361, confirmed: false, partnerConfirmed: false, tz: "Asia/Seoul", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "af", name: "Air France-KLM Flying Blue", days: 359, confirmed: false, partnerConfirmed: false, tz: "Europe/Paris", hour: 0, note: "推算邏輯：巴黎當地 00:00。<br/>通常釋出較多機位，優先保留給自家的「藍天飛行計劃」(Flying Blue) 會員。" },
+      { alliance: "天合聯盟 (SkyTeam)", id: "dl", name: "Delta SkyMiles", days: 331, confirmed: false, partnerConfirmed: false, tz: "America/New_York", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "vs", name: "Virgin Atlantic Flying Club", days: 331, confirmed: false, partnerConfirmed: false, tz: "Europe/London", hour: 5, note: "推算邏輯：英國時間 (GMT/BST) 凌晨 05:00 釋出。" },
 
       // === 寰宇一家 (Oneworld) ===
-      { alliance: "寰宇一家 (Oneworld)", id: "ay", name: "Finnair Plus", days: 361, tz: "Europe/Helsinki", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "qr", name: "Qatar Airways Privilege Club", days: 361, tz: "Asia/Qatar", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "cx", name: "Cathay Pacific Asia Miles", days: 360, tz: "Asia/Hong_Kong", hour: 8, confirmed: false, partnerConfirmed: true, note: "經實測：聯盟夥伴機位於香港時間 08:00 放票(已確認)；但自家兌換目前尚無法窺見票池，時點未能完全確認。" },
-      { alliance: "寰宇一家 (Oneworld)", id: "jl", name: "Japan Airlines Mileage Bank (JAL)", days: 360, tz: "Asia/Tokyo", hour: 10, confirmed: false, 
-        note: "經測試自家執飛與聯盟航空皆為 360 天。<br/>推算為每日日本時間 10:00 (台灣 09:00)。<br/><br/>[規律]<br/>超過 354 天：原則固定釋出 1 個頭等艙。<br/>46~353 天：頭等每 14 天出現。<br/>離出發兩週內：釋出剩餘里程機位。<br/>[預訂截止時間]<br/>網站需 48H 前；電話 24H 前完成。" 
+      { alliance: "寰宇一家 (Oneworld)", id: "ay", name: "Finnair Plus", days: 361, confirmed: false, partnerConfirmed: false, tz: "Europe/Helsinki", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "qr", name: "Qatar Airways Privilege Club", days: 361, confirmed: false, partnerConfirmed: false, tz: "Asia/Qatar", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "cx", name: "Cathay Pacific Asia Miles", days: 360, confirmed: false, partnerConfirmed: true, tz: "Asia/Hong_Kong", hour: 8 },
+      { alliance: "寰宇一家 (Oneworld)", id: "jl", name: "Japan Airlines Mileage Bank (JAL)", days: 360, confirmed: false, partnerConfirmed: false, tz: "Asia/Tokyo", hour: 10, 
+        note: "<strong>⚠️ [外家/夥伴航空放票高度不確定性]</strong><br/>JMB 夥伴航空、Oneworld、捷星等每家規則皆不一定！<br/>例如：AA(美航)目前僅能看 331 天後；國泰(CX) 單程香港與單程東京放出的遠期日期甚至有落差。<br/><br/>[規律/預訂]<br/>>354 天：固定釋出 1 頭等。<br/>46~353 天：頭等每 14 天出現。<br/>網站需 48H 前；電話 24H 前完成。" 
       },
-      { alliance: "寰宇一家 (Oneworld)", id: "ba", name: "British Airways Executive Club", days: 355, tz: "Europe/London", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "qf", name: "Qantas Frequent Flyer", days: 353, tz: "Australia/Sydney", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "as", name: "Alaska Mileage Plan", days: 331, tz: "America/Los_Angeles", hour: 0, confirmed: true, note: "備註：原330天，嚴格推算互換為331天。" },
-      { alliance: "寰宇一家 (Oneworld)", id: "aa", name: "American AAdvantage", days: 331, tz: "America/Chicago", hour: 0 },
-      { alliance: "寰宇一家 (Oneworld)", id: "ib", name: "Iberia Plus", days: 330, tz: "Europe/Madrid", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "ba", name: "British Airways Executive Club", days: 355, confirmed: false, partnerConfirmed: false, tz: "Europe/London", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "qf", name: "Qantas Frequent Flyer", days: 353, confirmed: false, partnerConfirmed: false, tz: "Australia/Sydney", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "as", name: "Alaska Mileage Plan", days: 331, confirmed: false, partnerConfirmed: true, tz: "America/Los_Angeles", hour: 0, note: "備註：原330天，嚴格推算互換為331天。" },
+      { alliance: "寰宇一家 (Oneworld)", id: "aa", name: "American AAdvantage", days: 331, confirmed: false, partnerConfirmed: false, tz: "America/Chicago", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "ib", name: "Iberia Plus", days: 330, confirmed: false, partnerConfirmed: false, tz: "Europe/Madrid", hour: 0 },
 
       // === 獨立 / 其他 (Non-Alliance) ===
-      { alliance: "獨立計畫 / 其他", id: "jx", name: "Starlux Airlines 星宇航空 (COSMILE)", days: 360, tz: "Asia/Taipei", hour: 8, confirmed: true },
-      { alliance: "獨立計畫 / 其他", id: "ey", name: "Etihad Guest", days: 330, tz: "Asia/Dubai", hour: 0 },
-      { alliance: "獨立計畫 / 其他", id: "ha", name: "Hawaiian Airlines", days: 330, tz: "Pacific/Honolulu", hour: 0 },
-      { alliance: "獨立計畫 / 其他", id: "ek", name: "Emirates Skywards", days: 328, tz: "Asia/Dubai", hour: 0, note: "並不會釋出頭等艙機位給予除了澳洲航空 (Qantas) 以外的合作夥伴航空，透過自家哩程計畫兌換機會最高。" }
+      { alliance: "獨立計畫 / 其他", id: "jx", name: "Starlux Airlines 星宇航空 (COSMILE)", days: 360, confirmed: true, partnerConfirmed: false, tz: "Asia/Taipei", hour: 8 },
+      { alliance: "獨立計畫 / 其他", id: "ey", name: "Etihad Guest", days: 330, confirmed: false, partnerConfirmed: false, tz: "Asia/Dubai", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ha", name: "Hawaiian Airlines", days: 330, confirmed: false, partnerConfirmed: false, tz: "Pacific/Honolulu", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ek", name: "Emirates Skywards", days: 328, confirmed: false, partnerConfirmed: false, tz: "Asia/Dubai", hour: 0, note: "並不會釋出頭等艙機位給予除了澳洲航空 (Qantas) 以外的合作夥伴航空，透過自家哩程計畫兌換機會最高。" }
     ];
 
     function pad(num) { return String(num).padStart(2, '0'); }
 
-    // 時區轉換演算法 (完美處理夏令/冬令)
     function getTZTime(year, monthIndex, day, timeZone, targetHour) {
       let guess = new Date(Date.UTC(year, monthIndex, day, 12, 0, 0));
       let parts = new Intl.DateTimeFormat('en-US', {
@@ -277,34 +281,33 @@
       const al = airlines[idx];
       const infoEl = document.getElementById('info-box');
       
-      let noteHtml = al.note ? `<div style="margin-top:1.5rem;font-size:0.95em;color:#fcd34d;background:rgba(255,255,255,0.05);padding:1rem;border-radius:12px;line-height:1.6;"><strong>💡 深度經驗與備註</strong><br/>${al.note}</div>` : '';
+      let noteHtml = al.note ? `<div style="margin-top:1.5rem; font-size:0.95em; color:#facc15; background:rgba(0,0,0,0.4); padding:1rem; border-radius:12px; line-height:1.6; border: 1px solid rgba(250,204,21,0.2);"><strong>💡 深度經驗與規律</strong><br/>${al.note}</div>` : '';
 
-      // 解析自營 vs 夥伴邏輯
       const routes = [];
       const pDays = al.partnerDays || al.days;
       const pTz   = al.partnerTz || al.tz;
       const pHour = al.partnerHour !== undefined ? al.partnerHour : al.hour;
-      const pConf = al.partnerConfirmed !== undefined ? al.partnerConfirmed : (al.confirmed || false);
+      const pConf = al.partnerConfirmed || false;
+      const oConf = al.confirmed || false;
 
-      // 當包含精確度(confirmed)在內的所有屬性都相等時，才合併顯示
-      if (pDays === al.days && pTz === al.tz && pHour === al.hour && pConf === (al.confirmed || false)) {
-         routes.push({ name: "自家執飛 與 聯盟夥伴航空 (發放規則一致)", days: al.days, tz: al.tz, hour: al.hour, confirmed: al.confirmed || false });
-      } else {
-         routes.push({ name: "自家執飛航班 (Own Metal)", days: al.days, tz: al.tz, hour: al.hour, confirmed: al.confirmed || false });
-         routes.push({ name: "聯盟夥伴航空 (Partner Airlines)", days: pDays, tz: pTz, hour: pHour, confirmed: pConf });
-      }
+      routes.push({ type: 'own', name: "自家執飛航班 (Own Metal)", days: al.days, tz: al.tz, hour: al.hour, confirmed: oConf });
+      routes.push({ type: 'partner', name: "外家/聯盟夥伴航班 (依各外家判定為主)", days: pDays, tz: pTz, hour: pHour, confirmed: pConf });
 
-      let innerContent = `<strong>${al.name}</strong><br/>`;
-      innerContent += noteHtml;
+      // Title Card
+      let innerContent = `<div class="status-title-box">🏁 ${al.name}</div>`;
 
       routes.forEach((route, rIdx) => {
-          let routeLabel = `<div style="margin-top:1.5rem; margin-bottom:0.5rem; padding:0.4rem 0.8rem; background:rgba(244,63,94,0.2); border-radius:6px; color:#fecdd3; font-weight:bold; display:inline-block;">🏷️ ${route.name}</div>`;
+          let routeColorBg = route.type === 'own' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(167, 139, 250, 0.15)';
+          let routeColorBorder = route.type === 'own' ? 'rgba(56, 189, 248, 0.5)' : 'rgba(167, 139, 250, 0.5)';
+          let routeColorText = route.type === 'own' ? '#bae6fd' : '#e9d5ff';
+          let routeIcon = route.type === 'own' ? '✈️' : '🤝';
+
+          let routeLabel = `<div style="margin-bottom:0.8rem; padding:0.4rem 0.8rem; background:rgba(0,0,0,0.3); border-radius:6px; color:${routeColorText}; font-weight:bold; display:inline-block;">${routeIcon} ${route.name}</div>`;
           
           let confirmedHtml = route.confirmed ? 
             `<span style="display:inline-block; margin-left:8px; margin-bottom:4px; padding:2px 8px; background:rgba(16, 185, 129, 0.15); color:#34d399; border-radius:6px; font-size:0.75em; border:1px solid rgba(16,185,129,0.3);">✅ 已確認精確時點</span>` : 
-            `<span style="display:inline-block; margin-left:8px; margin-bottom:4px; padding:2px 8px; background:rgba(244, 63, 94, 0.15); color:#fb7185; border-radius:6px; font-size:0.75em; border:1px solid rgba(244,63,94,0.3);">⚠️ 依經驗約略推估</span>`;
+            `<span style="display:inline-block; margin-left:8px; margin-bottom:4px; padding:2px 8px; background:rgba(244, 63, 94, 0.15); color:#fb7185; border-radius:6px; font-size:0.75em; border:1px solid rgba(244,63,94,0.3);">⚠️ 未確認精確時間 (約略推估)</span>`;
 
-          // 動態推算目前最新放票狀態
           let tzDateStr = new Date().toLocaleString('en-US', {timeZone: route.tz === 'UTC' ? 'UTC' : route.tz});
           let ptDate = new Date(tzDateStr);
           let hqYear = ptDate.getFullYear();
@@ -339,25 +342,28 @@
             shortTzStr = shortTzParts.find(p => p.type === 'timeZoneName')?.value || route.tz.split('/')[1];
           }
 
+          let blockStyle = `margin-bottom: 1.5rem; padding: 1.5rem; background: ${routeColorBg}; border-top: 3px solid ${routeColorBorder}; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);`;
+
           innerContent += `
-            ${routeLabel} ${confirmedHtml}<br/>
-            推算基準：提早 <strong>${route.days}</strong> 天 <br/>
-            換算時區範圍：<strong>${route.tz.replace('_', ' ')}</strong> 當地 <strong>${pad(targetHour)}:00</strong> (當地季節縮寫：${shortTzStr})
-            
-            <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed rgba(255,255,255,0.15);">
-                👉 此刻最遠可訂：<br/>
-                <strong style="color:white; font-size:1.1em;">${bookableFlight.getFullYear()}-${pad(bookableFlight.getMonth()+1)}-${pad(bookableFlight.getDate())}</strong><br/><br/>
-                <span style="color:var(--text-muted); font-size: 0.85em;">(下波在台灣時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} )</span>
+            <div style="${blockStyle}">
+                ${routeLabel} ${confirmedHtml}<br/>
+                推算基準：提早 <strong style="color:#fff; font-size:1.1em;">${route.days}</strong> 天 <br/>
+                換算時區範圍：<strong style="color:#fff;">${route.tz.replace('_', ' ')}</strong> 當地 <strong style="color:#fff;">${pad(targetHour)}:00</strong> (季節縮寫：${shortTzStr})
+                
+                <div style="margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px dashed rgba(255,255,255,0.2);">
+                    👉 近期最遠可訂：<strong style="color:white; font-size:1.2em;">${bookableFlight.getFullYear()}-${pad(bookableFlight.getMonth()+1)}-${pad(bookableFlight.getDate())}</strong><br/>
+                    <div style="color:rgba(255,255,255,0.7); font-size: 0.85em; margin-top: 0.4rem;">(下波在台灣時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} )</div>
+                </div>
             </div>
           `;
       });
+      
+      innerContent += noteHtml;
 
       infoEl.innerHTML = innerContent;
       infoEl.style.display = 'block';
       document.getElementById('result-card').style.display = 'none';
     }
-
-    let globalConfig = [];
 
     function handleCalculate() {
       const idx = document.getElementById('airline').value;
@@ -374,14 +380,11 @@
       const pDays = al.partnerDays || al.days;
       const pTz   = al.partnerTz || al.tz;
       const pHour = al.partnerHour !== undefined ? al.partnerHour : al.hour;
-      const pConf = al.partnerConfirmed !== undefined ? al.partnerConfirmed : (al.confirmed || false);
+      const pConf = al.partnerConfirmed || false;
+      const oConf = al.confirmed || false;
 
-      if (pDays === al.days && pTz === al.tz && pHour === al.hour && pConf === (al.confirmed || false)) {
-         routes.push({ name: "自家與聯盟夥伴", days: al.days, tz: al.tz, hour: al.hour, confirmed: al.confirmed || false });
-      } else {
-         routes.push({ name: "自家執飛(Own)", days: al.days, tz: al.tz, hour: al.hour, confirmed: al.confirmed || false });
-         routes.push({ name: "聯盟夥伴(Partner)", days: pDays, tz: pTz, hour: pHour, confirmed: pConf });
-      }
+      routes.push({ type: 'own', name: "自家執飛航班(Own)", days: al.days, tz: al.tz, hour: al.hour, confirmed: oConf });
+      routes.push({ type: 'partner', name: "外家/聯盟夥伴(Partner)", days: pDays, tz: pTz, hour: pHour, confirmed: pConf });
 
       globalConfig = [];
       const resBox = document.getElementById('result-card');
@@ -413,10 +416,17 @@
           let hqLabel = route.tz === 'UTC' ? 'UTC' : route.tz.split('/')[1].replace('_',' ');
           
           let routeHeader = `✨ 航線規則：【${route.name}】\n`;
+          let routeIcon = route.type === 'own' ? '✈️' : '🤝';
+
+          let blockStyle = route.type === 'own' ? 
+            'border-top: 3px solid rgba(56, 189, 248, 0.4); background: linear-gradient(to bottom, rgba(56,189,248,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;' : 
+            'border-top: 3px solid rgba(167, 139, 250, 0.4); background: linear-gradient(to bottom, rgba(167,139,250,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;';
+
+          if (rIdx === 0) blockStyle = blockStyle.replace('margin-top: 1.5rem;', 'margin-top: 0;');
 
           resultHtml += `
-<div class="route-block">
-<pre>${routeHeader}--------------------------------------------------
+<div class="route-block" style="${blockStyle}">
+<pre>${routeIcon} ${routeHeader}--------------------------------------------------
 🎯 目標出發日期: ${departureVal}
 --------------------------------------------------
 📍 ${hqLabel} 當地 (HQ): 
