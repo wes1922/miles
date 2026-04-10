@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <!-- 聲明網頁使用萬國碼 UTF-8，支援中文顯示不亂碼 -->
+  <meta charset="UTF-8" />
+  <!-- 設置 Viewport，讓網頁能在手機上正確顯示比例 (響應式設計基礎) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Global Airlines Award Release Hub</title>
+  
+  <style>
+    /* 
+     * CSS 變數定義區 (Root) 
+     * 我們把各個顏色的色碼（色碼表）存在這裡，未來要換佈景主題只要改這幾行就好
+     */
+    :root {
+      --bg-color: #0f172a;        /* 網頁主背景顏色：深藍黑色 */
+      --card-bg: rgba(30, 41, 59, 0.7); /* 卡片半透明背景，配合 backdrop-filter 創造毛玻璃感 */
+      --primary: #f43f5e;         /* 主色調：桃花粉紅，用於按鈕 */
+      --primary-hover: #e11d48;   /* 主色調 (滑鼠游標停留在上方的深紅變化版) */
+      --text-main: #f8fafc;       /* 網頁主要文字顏色：偏冷白 */
+      --text-muted: #94a3b8;      /* 網頁次要文字顏色：淺灰藍 */
+      --accent: #facc15;          /* 強調色：黃色，用於警告跟提醒框最顯眼處 */
+    }
+
+    /* 網頁整體設定 (Body) */
+    body {
+      margin: 0;
+      padding: 0;
+      /* 定義字型，優先使用 Apple 系統字型，沒有的話退而求其次用微軟正黑或 Arial */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+      display: flex; /* 使用 Flex 排版，主要為了讓中央容器置中 */
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh; /* 確保背景圖會鋪滿整個螢幕的高 */
+      /* 下面兩行是用來在深色背景的左上角與右下角畫出淡淡的光暈 (粉紅與黃色光) */
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(250, 204, 21, 0.1) 0px, transparent 50%);
+    }
+
+    /* 網頁正中央那個浮空卡片 (Container) */
+    .container {
+      width: 90%;
+      max-width: 650px; /* 限制最寬 650 像素，避免在電腦大螢幕上變太寬 */
+      margin-top: 5vmin;
+      margin-bottom: 5vmin;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 24px; /* 四個角的圓角程度 */
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); /* 下方的陰影 */
+      backdrop-filter: blur(16px); /* 蘋果風格的毛玻璃特效，會模糊背後的光暈 */
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05); /* 卡片最周圍超細的光澤邊框 */
+    }
+
+    /* 以下是各個常用標籤與區塊的設計 */
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: #fff;
+    }
+    p {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+    
+    /* 顯示版本號的藥丸狀灰色膠囊小標籤 */
+    .version-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+    
+    /* 在最上面的翡翠綠色「情報更新日」佈告欄 */
+    .news-panel {
+      background: rgba(16, 185, 129, 0.1); /* 翡翠綠的超透明背景 */
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+      color: #d1fae5;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    /* 下拉選單跟日期選擇器的樣式 */
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    select, input[type="date"] {
+      width: 100%;
+      box-sizing: border-box; /* 確保 Padding 包含在 100% 寬度內，不會超出右邊界 */
+      padding: 1rem;
+      font-size: 1.05rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-main);
+      color-scheme: dark; /* 叫瀏覽器給這個輸入框套用黑色的內部 UI (月曆選單) */
+      transition: border-color 0.2s; /* 滑鼠點擊時邊框顏色要有 0.2 秒的慢慢變亮特效 */
+    }
+    select:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: var(--primary); /* 當你正在打字或選擇時，邊框亮起粉紅色 */
+    }
+
+    /* 「立即推算精確放票時間」黃藍綠色漸層按鈕 */
+    .btn-calc {
+      margin-top: 2rem;
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      border: none;
+      border-radius: 12px;
+      cursor: pointer; /* 滑鼠到上面要變成「手勢」指標 */
+      box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .btn-calc:hover { box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4); }
+    .btn-calc:active { transform: scale(0.98); } /* 按下去的時候按鈕整體會縮小 2%，營造按鍵物理感 */
+
+    /* 第二頁：產出日期的結果報表背景底色 (預設隱藏 display: none) */
+    .result-card {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      display: none; 
+    }
+    /* 報表裡面所有程式碼 / 排版對齊文字的地方 */
+    pre {
+      font-family: inherit; /* 沿用 body 的美觀字體，不要用瀏覽器很醜的等寬字 */
+      white-space: pre-wrap; /* 當字太多時自動換行，不會產生難看的橫向捲軸 */
+      color: var(--text-main);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+    
+    /* 下載 .ics 行事曆的副按鈕功能 */
+    .btn-ics {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15); /* 透明發亮的背景 */
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-ics:hover { background: rgba(255, 255, 255, 0.3); }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #475569;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 用來容納所有元素的半透明玻璃主框 -->
+  <div class="container">
+    <h1>🌍 全球航空常客計畫 哩程放票推算器</h1>
+    <div style="text-align: center;"><span class="version-tag">全程式碼註解版：v3.5 (Stable Precision Client)</span></div>
+    <p>統整全球各大航空，精準跨國時區自動轉換</p>
+
+    <!-- 公告面板：告知使用者目前的資料核實狀況 -->
+    <div class="news-panel">
+      <strong>🗓️ 情報更新日：動態時間軸</strong><br/>
+      <span style="color: #6ee7b7; font-weight: bold; margin-top:0.3rem; display:inline-block;">目前已完成「精準放票時刻確認」的航空實測日期 (✅)：</span><br/>
+      <ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem; color: #a7f3d0;">
+        <li style="margin-bottom:0.2rem;"><strong>自家執飛已達精確：</strong> 長榮 BR (26.04.08)、星宇 JX (26.04.08)、華航 CI (26.04.08)、ANA (26.04.09)、日本航空 JAL (26.04.09)</li>
+        <li><strong>外站/夥伴已達精確：</strong> 阿拉斯加 AS (26.04.08)、國泰 CX (26.04.08)、ANA (26.04.09)</li>
+      </ul>
+      <div style="font-size: 0.85em; color: rgba(167, 243, 208, 0.7); margin-top: 0.5rem;">* 未列入上方名單之航空公司，時間與日期為系統經驗推估，以各官網實際伺服器時間為準。</div>
+    </div>
+
+    <!-- 選單：用 onchange() 在 Javascript 中綁定，代表使用者只要一切換選項，就馬上執行 handleAirlineChange() 這個函數 -->
+    <label for="airline">選擇航空公司 / 哩程計畫</label>
+    <select id="airline" onchange="handleAirlineChange()"></select>
+
+    <!-- 這個空區塊就是一開始選擇完航空後，下面彈出的「提示卡片總區塊」 -->
+    <div id="info-box" style="margin: 1.5rem 0; display: none;"></div>
+
+    <!-- 選日期的日曆外掛 -->
+    <label for="departure" style="margin-top: 2rem;">設定目標出發日期 (去程)</label>
+    <input type="date" id="departure" />
+    
+    <!-- 大按鈕：按下後觸發 handleCalculate() 進行精密計算 -->
+    <button class="btn-calc" onclick="handleCalculate()">立即推算精確放票時間</button>
+
+    <!-- 這是最終結算後的報表區塊，一開始也是隱藏的 -->
+    <div class="result-card" id="result-card"></div>
+    
+    <div class="footer-note">
+      Build 2026.04.10 | Global Airlines Database Engine (Developer Ed.)
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================================================= 
+     * [第一部份：資料庫] 
+     * 這個陣列存儲了所有「航空公司」的模型參數，如果要加新的航空公司就是在這個清單裡新增一行。
+     * - id:             專屬英文小寫字母，也是用在前台產出 .ics 檔名稱的代號。
+     * - confirmed:      (布林值) 若為 true，代表系統會給它套上「綠燈✅ 精確時點」徽章。
+     * - tz, hour:       總部伺服器的時區，與放出機票的整點時間 (0~23)。
+     * - partner:        如果夥伴航空有自己的放票天數/時間規則，才會有 partnerDays, partnerTz 等參數。
+     * ========================================================================================= */
+    const airlines = [
+      // --- 星空聯盟區 ---
+      { alliance: "星空聯盟 (Star Alliance)", id: "br", name: "EVA Air 長榮航空 (Infinity MileageLands)", days: 360, confirmed: true, partnerConfirmed: false, tz: "Asia/Taipei", hour: 8 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "lh", name: "Lufthansa Miles & More", days: 360, confirmed: false, partnerConfirmed: false, tz: "Europe/Berlin", hour: 0, note: "只會在出發日前 15 日之內，釋出頭等艙哩程機位給予夥伴航空計畫兌換。" },
+      { alliance: "星空聯盟 (Star Alliance)", id: "nh", name: "All Nippon Airways (ANA)", days: 355, confirmed: true, partnerDays: 356, partnerConfirmed: true, tz: "Asia/Tokyo", hour: 9, 
+        note: "ANA 自家與外家夥伴的放票基準日有別。\n另請注意：每家外家航空能看到的遠期日期不一定相同。", 
+        icsDesc: "ANA 經驗張數：\\n頭等艙：2張 (如SFO/ORD) 或 1-2張(JFK)\\n商務艙：1-2張\\n經濟艙：2-4張" // 這是給下載行程日曆專屬的備註
+      },
+      // ... 其他星空聯盟航空 ...
+      { alliance: "星空聯盟 (Star Alliance)", id: "oz", name: "Asiana Club", days: 361, confirmed: false, partnerConfirmed: false, tz: "Asia/Seoul", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "av", name: "Avianca Lifemiles", days: 360, confirmed: false, partnerConfirmed: false, tz: "UTC", hour: 0, note: "推算邏輯：通常為每天 UTC 00:00。" },
+      { alliance: "星空聯盟 (Star Alliance)", id: "ac", name: "Air Canada Aeroplan", days: 355, confirmed: false, partnerConfirmed: false, tz: "America/Toronto", hour: 0 },
+      { alliance: "星空聯盟 (Star Alliance)", id: "sq", name: "Singapore Airlines KrisFlyer", days: 355, confirmed: false, partnerConfirmed: false, tz: "Asia/Singapore", hour: 8, note: "例外提醒：美國出發回新加坡會依當地午夜釋出。<br/>長程商務幾乎只限自家。" },
+      { alliance: "星空聯盟 (Star Alliance)", id: "ua", name: "United MileagePlus", days: 337, confirmed: false, partnerConfirmed: false, tz: "America/Chicago", hour: 0 },
+      
+      // --- 天合聯盟區 ---
+      { alliance: "天合聯盟 (SkyTeam)", id: "ci", name: "China Airlines 中華航空 (Dynasty Flyer)", days: 361, confirmed: true, partnerConfirmed: false, tz: "Asia/Taipei", hour: 8 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "ke", name: "Korean Air SkyPass", days: 361, confirmed: false, partnerConfirmed: false, tz: "Asia/Seoul", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "af", name: "Air France-KLM Flying Blue", days: 359, confirmed: false, partnerConfirmed: false, tz: "Europe/Paris", hour: 0, note: "推算邏輯：巴黎當地 00:00。<br/>優先保留給自家會員。" },
+      { alliance: "天合聯盟 (SkyTeam)", id: "dl", name: "Delta SkyMiles", days: 331, confirmed: false, partnerConfirmed: false, tz: "America/New_York", hour: 0 },
+      { alliance: "天合聯盟 (SkyTeam)", id: "vs", name: "Virgin Atlantic Flying Club", days: 331, confirmed: false, partnerConfirmed: false, tz: "Europe/London", hour: 5, note: "推算邏輯：英國時間凌晨 05:00 釋出。" },
+
+      // --- 寰宇一家區 ---
+      { alliance: "寰宇一家 (Oneworld)", id: "cx", name: "Cathay Pacific Asia Miles", days: 360, confirmed: false, partnerConfirmed: true, tz: "Asia/Hong_Kong", hour: 8 },
+      { alliance: "寰宇一家 (Oneworld)", id: "jl", name: "Japan Airlines Mileage Bank (JAL)", days: 360, confirmed: true, partnerConfirmed: false, tz: "Asia/Tokyo", hour: 0, 
+        note: "日本航空 (JAL) 自家放票精煉確認為：日本時間 00:00。<br/><br/><strong>⚠️ [外家/夥伴航空放票高度不確定性]</strong><br/>例如：AA(美航)目前僅能看 331 天後；國泰(CX) 單程香港與單程東京放出的遠期日期甚至有落差。<br/><br/>[規律/預訂]<br/>>354 天：固定釋出 1 頭等。<br/>46~353 天：頭等每 14 天出現。<br/>網站需 48H 前；電話 24H 前完成。" 
+      },
+      { alliance: "寰宇一家 (Oneworld)", id: "as", name: "Alaska Mileage Plan", days: 331, confirmed: false, partnerConfirmed: true, tz: "America/Los_Angeles", hour: 0, note: "備註：原330天，嚴格推算互換為331天。" },
+      // ... 其他寰宇一家航空 ...
+      { alliance: "寰宇一家 (Oneworld)", id: "ay", name: "Finnair Plus", days: 361, confirmed: false, partnerConfirmed: false, tz: "Europe/Helsinki", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "qr", name: "Qatar Airways Privilege Club", days: 361, confirmed: false, partnerConfirmed: false, tz: "Asia/Qatar", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "ba", name: "British Airways Executive Club", days: 355, confirmed: false, partnerConfirmed: false, tz: "Europe/London", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "qf", name: "Qantas Frequent Flyer", days: 353, confirmed: false, partnerConfirmed: false, tz: "Australia/Sydney", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "aa", name: "American AAdvantage", days: 331, confirmed: false, partnerConfirmed: false, tz: "America/Chicago", hour: 0 },
+      { alliance: "寰宇一家 (Oneworld)", id: "ib", name: "Iberia Plus", days: 330, confirmed: false, partnerConfirmed: false, tz: "Europe/Madrid", hour: 0 },
+
+      // --- 獨立航空區 ---
+      { alliance: "獨立計畫 / 其他", id: "jx", name: "Starlux Airlines 星宇航空 (COSMILE)", days: 360, confirmed: true, partnerConfirmed: false, tz: "Asia/Taipei", hour: 8 },
+      { alliance: "獨立計畫 / 其他", id: "ey", name: "Etihad Guest", days: 330, confirmed: false, partnerConfirmed: false, tz: "Asia/Dubai", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ha", name: "Hawaiian Airlines", days: 330, confirmed: false, partnerConfirmed: false, tz: "Pacific/Honolulu", hour: 0 },
+      { alliance: "獨立計畫 / 其他", id: "ek", name: "Emirates Skywards", days: 328, confirmed: false, partnerConfirmed: false, tz: "Asia/Dubai", hour: 0, note: "並不會釋出頭等艙機位給予除了澳洲航空以外的夥伴。" }
+    ];
+
+    /* ========================================================================================= 
+     * [第二部份：通用工具函式] 
+     * 這些是輔助「時間計算」的核心工具，確保時間跟日期的數字格式正確 (如 9 自動變成 09) 
+     * ========================================================================================= */
+
+    // 數字補零器：確保月份或日期小於 10 時，前面被填上 0 (例如 '5' 會變 '05')
+    function pad(num) { return String(num).padStart(2, '0'); }
+
+    /**
+     * 【核心時區轉化引擎】：把目標「時區、日期、整點」透過瀏覽器的原生 Intl API，暴力推算出精確的 UTC 標準時間。
+     * 因為這套寫法是吃瀏覽器的底層資料包，所以它「自動繼承完美支援日光節約時間 (夏令時 / DST)」，
+     * 也就是說在冬天跟夏天，New York 的時間被解析出來的結果會剛好少一或多一小時，無敵準確！
+     */
+    function getTZTime(year, monthIndex, day, timeZone, targetHour) {
+      // 1. 先用 UTC 中午時間做假定 (12:00)，避免因為時區極端剛好跳日
+      let guess = new Date(Date.UTC(year, monthIndex, day, 12, 0, 0));
+      
+      // 2. 利用使用者設定的 timeZone 丟去給 Intl 框架換算出時區名稱標籤，例如 GMT-04:00 
+      let parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone, 
+        timeZoneName: 'longOffset',
+      }).formatToParts(guess);
+      
+      let tzOffsetStr = parts.find(p => p.type === 'timeZoneName').value; // 取出字串
+      let offsetHours = 0, offsetMinutes = 0;
+      
+      // 3. 把字串 GMT-04:00 拆解成數字來逆向減去，以求得最純的 UTC 對應時間點
+      if (tzOffsetStr !== "GMT") {
+         const match = tzOffsetStr.match(/GMT([+-])(\d+):(\d+)/);
+         if (match) {
+            let sign = match[1] === '-' ? -1 : 1;
+            offsetHours = parseInt(match[2], 10) * sign;
+            offsetMinutes = parseInt(match[3], 10) * sign;
+         }
+      }
+      
+      // 4. 重建最後正確的 Date 物件 (目標小時 - 偏移時數 = 推算出絕對的 UTC，再產生物件)
+      return new Date(Date.UTC(year, monthIndex, day, targetHour - offsetHours, -offsetMinutes, 0));
+    }
+
+    // 這個是用來把 Date 物件變成 YYYY-MM-DD HH:mm:ss 格式字串的工具，方便前台顯示
+    function formatToYMDHMS(d, tz) {
+      const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      // 如果有傳入時區 (例如 Asia/Taipei) 就轉成這個國家的在地這幾分幾秒，沒傳就是瀏覽器預設(你電腦)的時間
+      if(tz) options.timeZone = tz; 
+      let s = new Intl.DateTimeFormat('en-CA', options).format(d);
+      s = s.replace(',', ''); // 把有時候瀏覽器會生出的奇怪逗號給拿掉
+      if(s.includes(' 24:')) s = s.replace(' 24:', ' 00:'); // 一些瀏覽器的 Bug 會把 0 點寫成 24，必須修正
+      return s;
+    }
+
+    /* ========================================================================================= 
+     * [第三部份：操作互動邏輯] 
+     * 負責處理：網頁載入時生出選項、使用者下拉選單時動態生出卡片，以及點下了計算按鈕事件。
+     * ========================================================================================= */
+
+    // 當網頁第一次開好、HTML載入完畢，這個函式會執行，用來生出大選單的那些 <option> 航空選項。
+    window.onload = function() {
+      const sel = document.getElementById('airline');
+      let html = '<option value="" disabled selected>請選擇一家航空...</option>';
+      let currentAlliance = "";
+      
+      // 跑一次 airlines 迴圈，利用 currentAlliance 變數動態產生分類的群組 (optgroup)
+      airlines.forEach((al, index) => {
+        if (al.alliance !== currentAlliance) {
+          if (currentAlliance !== "") html += `</optgroup>`;
+          currentAlliance = al.alliance;
+          html += `<optgroup label="${currentAlliance}">`;
+        }
+        // index 就會是陣列中的號碼，例如EVA長榮是 0 號，把數字綁在地基欄位
+        html += `<option value="${index}">${al.name} (${al.days} 天)</option>`;
+      });
+      if (currentAlliance !== "") html += `</optgroup>`;
+      sel.innerHTML = html;
+    };
+
+    /**
+     * 【主函式 1】：當「下拉選單」一改變 (使用者剛選了航空)，會立刻觸發，顯示該航空自家的特徵卡區塊。
+     * 這一塊「沒有」進行最終日期計算，純粹是利用你此刻的時間推算「下一次放票何時出現」及規則提示卡。
+     */
+    function handleAirlineChange() {
+      const idx = document.getElementById('airline').value;
+      if(idx === "") return; // 防呆：如果沒選東西就不要做事
+      const al = airlines[idx]; // 從資料庫陣列撈出選擇的那一個物件
+      const infoEl = document.getElementById('info-box');
+      
+      // 製作黑底黃字的專屬秘方解說看板片段
+      let noteHtml = al.note ? `<div style="margin-top:1.5rem; font-size:0.95em; color:#facc15; background:rgba(0,0,0,0.4); padding:1rem; border-radius:12px; line-height:1.6; border: 1px solid rgba(250,204,21,0.2);"><strong>💡 深度經驗與規律</strong><br/>${al.note}</div>` : '';
+
+      // 建立包含自家跟外家共兩條路線的「路由資訊」，供後續迴圈暴力渲染
+      const routes = [];
+      const pDays = al.partnerDays || al.days;  // 沒寫夥伴天數就是套用自家天數
+      const pTz   = al.partnerTz || al.tz;
+      const pHour = al.partnerHour !== undefined ? al.partnerHour : al.hour;
+
+      // 1. 將「自家」路線推入要渲染的清單
+      routes.push({ type: 'own', name: "自家執飛航班 (Own Metal)", days: al.days, tz: al.tz, hour: al.hour, confirmed: al.confirmed || false });
+      // 2. 將「外家」推入要渲染的清單
+      routes.push({ type: 'partner', name: "外家/聯盟夥伴航班 (依各外家判定為主)", days: pDays, tz: pTz, hour: pHour, confirmed: al.partnerConfirmed || false });
+
+      // 用字串把黃金級的標題先塞好
+      let innerContent = `<div style="padding: 1rem 1.5rem; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(245, 158, 11, 0.1)); border-left: 4px solid var(--accent); border-radius: 10px; font-size: 1.25rem; font-weight: bold; color: #fff; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">🏁 ${al.name}</div>`;
+
+      // 利用上面建好的兩條路線，開始用迴圈畫出兩張獨立顏色的卡片
+      routes.forEach((route, rIdx) => {
+          // 動態挑色：type 是 own 的套用藍色色系，partner 套用紫色色系
+          let routeColorBg = route.type === 'own' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(167, 139, 250, 0.15)';
+          let routeColorBorder = route.type === 'own' ? 'rgba(56, 189, 248, 0.5)' : 'rgba(167, 139, 250, 0.5)';
+          let routeColorText = route.type === 'own' ? '#bae6fd' : '#e9d5ff';
+          let routeIcon = route.type === 'own' ? '✈️' : '🤝';
+
+          // 把標籤套用上面的顏色
+          let routeLabel = `<div style="margin-bottom:0.8rem; padding:0.4rem 0.8rem; background:rgba(0,0,0,0.3); border-radius:6px; color:${routeColorText}; font-weight:bold; display:inline-block;">${routeIcon} ${route.name}</div>`;
+          
+          // 如果物件寫入「已實測✅true」，就會顯示超級綠色徽章，否則顯示紅色的不確定警告
+          let confirmedHtml = route.confirmed ? 
+            `<span style="display:inline-block; margin-left:8px; margin-bottom:4px; padding:2px 8px; background:rgba(16, 185, 129, 0.15); color:#34d399; border-radius:6px; font-size:0.75em; border:1px solid rgba(16,185,129,0.3);">✅ 已確認精確時點</span>` : 
+            `<span style="display:inline-block; margin-left:8px; margin-bottom:4px; padding:2px 8px; background:rgba(244, 63, 94, 0.15); color:#fb7185; border-radius:6px; font-size:0.75em; border:1px solid rgba(244,63,94,0.3);">⚠️ 未確認精確時間 (約略推估)</span>`;
+
+          // 【近期發票時點邏輯】用來推算：昨天或是下一次的開票範圍
+          let tzDateStr = new Date().toLocaleString('en-US', {timeZone: route.tz === 'UTC' ? 'UTC' : route.tz});
+          let ptDate = new Date(tzDateStr);
+          let hqYear = ptDate.getFullYear();
+          let hqMonth = ptDate.getMonth();
+          let hqDay = ptDate.getDate();
+          
+          let targetHour = route.hour || 0;
+          let todaysReleaseAbs = getTZTime(hqYear, hqMonth, hqDay, route.tz === 'UTC' ? 'UTC' : route.tz, targetHour);
+          
+          let latestReleaseBaseDay, nextReleaseBaseDay, nextReleaseAbs;
+          
+          // 如果現在看網頁的絕對時間大於今天機票開賣的絕對時間...代表今天的票「已經被放掉了」。
+          // 那下一波就是明天，因此 nextTarget 是明天。最新可訂就是算今天。
+          if (Date.now() >= todaysReleaseAbs.getTime()) {
+            latestReleaseBaseDay = new Date(hqYear, hqMonth, hqDay);
+            nextReleaseBaseDay = new Date(hqYear, hqMonth, hqDay + 1);
+            nextReleaseAbs = getTZTime(hqYear, hqMonth, hqDay + 1, route.tz === 'UTC' ? 'UTC' : route.tz, targetHour);
+          } else {
+            // 如果還沒大於今天開賣時間，代表今天的票「還沒開放」。
+            // 因此最新可訂定格在昨天，下一波等的就是今天的整點。
+            latestReleaseBaseDay = new Date(hqYear, hqMonth, hqDay - 1);
+            nextReleaseBaseDay = new Date(hqYear, hqMonth, hqDay);
+            nextReleaseAbs = todaysReleaseAbs;
+          }
+          
+          // 加上航空公司規則的提早天數 (route.days)，推導出他對應到未來的一年後到底是哪一天
+          let bookableFlight = new Date(latestReleaseBaseDay);
+          bookableFlight.setDate(bookableFlight.getDate() + route.days);
+          
+          let nextBatchFlight = new Date(nextReleaseBaseDay);
+          nextBatchFlight.setDate(nextBatchFlight.getDate() + route.days);
+          
+          let nextTwStr = formatToYMDHMS(nextReleaseAbs, 'Asia/Taipei'); // 將他轉換成台灣讀得懂的方式印出來
+
+          // 獲取國家季節縮寫 (例如美國的 EST, EDT 或是日本的 JST) 顯示給用戶看，極限裝逼
+          let shortTzStr = route.tz;
+          if (route.tz !== 'UTC') {
+            let shortTzParts = new Intl.DateTimeFormat('en-US', {timeZone: route.tz, timeZoneName: 'short'}).formatToParts(nextReleaseAbs);
+            shortTzStr = shortTzParts.find(p => p.type === 'timeZoneName')?.value || route.tz.split('/')[1];
+          }
+
+          let blockStyle = `margin-bottom: 1.5rem; padding: 1.5rem; background: ${routeColorBg}; border-top: 3px solid ${routeColorBorder}; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);`;
+
+          // 最後把剛剛產生的所有小片段字串，用純粹的 HTML 屬性跟排版組起來，塞入迴圈字串裡。
+          innerContent += `
+            <div style="${blockStyle}">
+                ${routeLabel} ${confirmedHtml}<br/>
+                推算基準：提早 <strong style="color:#fff; font-size:1.1em;">${route.days}</strong> 天 <br/>
+                換算時區範圍：<strong style="color:#fff;">${route.tz.replace('_', ' ')}</strong> 當地 <strong style="color:#fff;">${pad(targetHour)}:00</strong> (季節縮寫：${shortTzStr})
+                
+                <div style="margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px dashed rgba(255,255,255,0.2);">
+                    👉 近期最遠可訂：<strong style="color:white; font-size:1.2em;">${bookableFlight.getFullYear()}-${pad(bookableFlight.getMonth()+1)}-${pad(bookableFlight.getDate())}</strong><br/>
+                    <div style="color:rgba(255,255,255,0.7); font-size: 0.85em; margin-top: 0.4rem;">(下波在台灣時間 ${nextTwStr} 釋出 ${nextBatchFlight.getFullYear()}-${pad(nextBatchFlight.getMonth()+1)}-${pad(nextBatchFlight.getDate())} )</div>
+                </div>
+            </div>
+          `;
+      });
+      
+      // 在下面長長接上黑底黃字的筆記
+      innerContent += noteHtml;
+
+      // 把一長串的字串真正的寫進網頁 (DOM) 裡面，讓畫面長出來，並且把顯示從 none 變成 block (顯示)
+      infoEl.innerHTML = innerContent;
+      infoEl.style.display = 'block';
+      document.getElementById('result-card').style.display = 'none'; // 先隱藏算好的報表，因為換航空應該重新算
+    }
+
+    // 這個全域變數是非常關鍵的資料交換區，它負責將 "按下去計算後" 所產生的那一包運算屬性，
+    // 對給另外一支 handleGenerateICS(下載) 程式使用，這叫狀態維持 (State Hosting)。
+    let globalConfig = [];
+
+    /**
+     * 【主函式 2】：當按下「立即推算精確放票日！」綠色大按鈕時觸發
+     * 他主要是拿你選好的預定回國「大日期」(例如 2026/05/20)，反推你到底在哪一個絕對秒數必須守在電腦前面搶票。
+     */
+    function handleCalculate() {
+      const idx = document.getElementById('airline').value;
+      const departureVal = document.getElementById('departure').value;
+      // 防呆保護：使用者不選就不理他，直接彈窗罵人
+      if(idx === "" || !departureVal) { alert("請確認已選擇航空公司並填寫目標出發日期！"); return; }
+      
+      const al = airlines[idx];
+      const [year, month, day] = departureVal.split('-'); // 拆解使用者的日期，把 2026-05-20 切掉連字號
+      
+      const routes = [];
+      const pDays = al.partnerDays || al.days;
+      const pTz   = al.partnerTz || al.tz;
+      const pHour = al.partnerHour !== undefined ? al.partnerHour : al.hour;
+      const pConf = al.partnerConfirmed || false;
+      const oConf = al.confirmed || false;
+
+      routes.push({ type: 'own', name: "自家執飛航班(Own)", days: al.days, tz: al.tz, hour: al.hour, confirmed: oConf });
+      routes.push({ type: 'partner', name: "外家/聯盟夥伴(Partner)", days: pDays, tz: pTz, hour: pHour, confirmed: pConf });
+
+      globalConfig = []; // 清空上一次的暫存記憶區
+      const resBox = document.getElementById('result-card');
+      let resultHtml = "";
+
+      // 又開始迴圈畫結果視窗了，因為要有藍色、紫色兩個計算報表
+      routes.forEach((route, rIdx) => {
+          // 在這裡，JavaScript 的日期必須要 month - 1，因為程式中一月叫 0，二月叫 1，超直覺的反人類設計
+          const releaseDate = new Date(year, parseInt(month) - 1, day);
+          releaseDate.setDate(releaseDate.getDate() - route.days); // 暴力把天數往前倒退指定的天數 (例如 360 天前)
+          
+          const rYear = releaseDate.getFullYear();
+          const rMonth = releaseDate.getMonth();
+          const rDay = releaseDate.getDate();
+          
+          // 大絕招運算：丟給上面我們寫的魔法轉化器，產生絕對精準包含時區的 Date 世界標準時。
+          const absoluteRelease = getTZTime(rYear, rMonth, rDay, route.tz === 'UTC' ? 'UTC' : route.tz, route.hour || 0);
+          
+          // --------- [午夜時間點 邏輯補強] --------
+          // 有些航空公司特別討厭 (或特別簡單)，在凌晨 00:00 放票。
+          // 為免大家閱讀困擾（有的人搞不懂星期一 00:00 是星期日半夜過後還是星期一半夜過後），
+          // 所以如果 hour === 0，就特地幫他多顯示一排文字：「這是前一天的 23:59:59 的當下」
+          const prevLocalDay = new Date(releaseDate);
+          if ((route.hour || 0) === 0) {
+            prevLocalDay.setDate(releaseDate.getDate() - 1); // 扣掉一天
+            // \n 是一個隱形的「純文字斷行指令」，因為這是要塞進 <pre> 格式指令框中所以只能寫 \n，不能用 HTML 標籤
+            var hqStr = `${prevLocalDay.getFullYear()}-${pad(prevLocalDay.getMonth()+1)}-${pad(prevLocalDay.getDate())} 23:59:59\n   (即 ${rYear}-${pad(rMonth+1)}-${pad(rDay)} 凌晨 00:00)`;
+          } else {
+            // 如果不是 0 點，那就是正常的描述。
+            var hqStr = `${rYear}-${pad(rMonth+1)}-${pad(rDay)} 當地時間 ${pad(route.hour)}:00 整`;
+          }
+
+          // 再次用轉換器把它翻譯成你「正在設定的這台電腦時間」跟「台灣的特定時區」
+          const twStr = formatToYMDHMS(absoluteRelease, 'Asia/Taipei');
+          const localStr = formatToYMDHMS(absoluteRelease);
+
+          // 核心存入 globalConfig，讓下一個叫 handleGenerateICS 的函數去存取第 rIdx 個陣列的參數。
+          globalConfig.push({ departureVal, absoluteRelease, al, route });
+
+          let hqLabel = route.tz === 'UTC' ? 'UTC' : route.tz.split('/')[1].replace('_',' ');
+          let routeHeader = `✨ 航線規則：【${route.name}】\n`;
+          let routeIcon = route.type === 'own' ? '✈️' : '🤝';
+
+          let blockStyle = route.type === 'own' ? 
+            'border-top: 3px solid rgba(56, 189, 248, 0.4); background: linear-gradient(to bottom, rgba(56,189,248,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;' : 
+            'border-top: 3px solid rgba(167, 139, 250, 0.4); background: linear-gradient(to bottom, rgba(167,139,250,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;';
+          if (rIdx === 0) blockStyle = blockStyle.replace('margin-top: 1.5rem;', 'margin-top: 0;');
+
+          // 印出那塊漂亮的像是打字機風格的資訊視窗，並配上一個 onclick() 呼叫下載功能的按鈕。
+          resultHtml += `
+<div class="route-block" style="${blockStyle}">
+<pre>${routeIcon} ${routeHeader}--------------------------------------------------
+🎯 目標出發日期: ${departureVal}
+--------------------------------------------------
+📍 ${hqLabel} 當地 (HQ): 
+   ${hqStr}
+📍 換算 台灣時間 (TW): 
+   ${twStr}
+📍 換算 您的電腦時間: 
+   ${localStr}</pre>
+<button class="btn-ics" onclick="handleGenerateICS(${rIdx})">📥 產生專屬行事曆提醒 (.ics檔)</button>
+</div>`;
+      });
+
+      resBox.innerHTML = resultHtml;
+      resBox.style.display = 'block';
+    }
+
+    /**
+     * 【按鈕觸發 3】：純前端動態將文字封裝打包成 .ics 日曆檔案
+     * 會由上面那個按鈕呼叫，並傳入自己是 rIdx 幾號的航空區塊，從陣列去取回絕對的 UTC 放票對象日期秒數。
+     */
+    function handleGenerateICS(rIdx) {
+      if (!globalConfig || !globalConfig[rIdx]) return;
+      const { departureVal, absoluteRelease, al, route } = globalConfig[rIdx]; // 把變數抽出來
+      
+      // iPhone 或 Google 行事曆不吃毫秒與有破折號的資料，只吃純數字：例如 20260408T231500Z，
+      // 所以透過 string().replace 把它整理成乾淨的結構
+      const dtStart = absoluteRelease.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const dtEnd = new Date(absoluteRelease.getTime() + 30*60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; // 設定半小時後結束 (假象事件)
+      const nowUtc = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; 
+      const uid = Math.random().toString(36).substring(2) + "@" + al.id + ".reminder"; // 特殊的亂碼 ID 以防行事曆重複
+
+      // 把資料庫裡面的黃色大提示 (note) 或是本來就有的 (icsDesc) 給拔除 HTML tag `replace(/<[^>]*>?/gm, '')` 並轉出換行
+      let descLines = route.icsDesc || al.icsDesc || `依經驗各熱門艙等數量有限，請準時搶票。`;
+      if (al.note && !route.icsDesc && !al.icsDesc) {
+        // 注意這裡用 \\n 雙斜線，這是因為 iCal 本身規格內文換行字尾要求有真正的保留字 `\` 跟 `n`，而不是字串斷行！
+        descLines = al.note.replace(/<br\/>/g, '\\n').replace(/<[^>]*>?/gm, '');
+      }
+
+      let routeTag = route.name ? ` [${route.name}]` : '';
+
+      // 下列全為 iCalendar RCF 長古老規範的強制寫法段
+      const icsString = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Airlines Award//Web//
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${nowUtc}
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+SUMMARY:搶 ${al.name}${routeTag} 機票 (${departureVal})
+DESCRIPTION:準備搶 ${al.name} 遠期機票\\n\\n起飛日期: ${departureVal}\\n規則: 提前 ${route.days} 天\\n\\n機位資訊與規律：\\n${descLines}
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:準點即將放票！(15分鐘後機票釋出)
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+      // 產生純前端「記憶體虛擬檔案 (Blob)」：把剛剛字串強制打包為 `text/calendar` 的實體檔案給瀏覽器
+      const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); // 用程式建立一個假連結 <a>
+      a.href = url; // 指向虛擬檔案
+      a.download = `award_${al.id}_${departureVal.replace(/-/g, '')}.ics`; // 產生檔案檔名
+      document.body.appendChild(a); // 把假連結掛到網頁上
+      a.click(); // 超光速自動幫使用者按下這個連結
+      document.body.removeChild(a); // 用完就把這個假連結給砍了無痕跡
+      URL.revokeObjectURL(url); // 清空記憶體防止網頁癱瘓變卡
+    }
+  </script>
+</body>
+</html>
