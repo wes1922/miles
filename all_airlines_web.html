@@ -393,19 +393,20 @@
         alert("請確認已選擇航空公司並填寫目標出發日期！");
         return;
       }
-     
+      
       const al = airlines[idx];
       const [year, month, day] = departureVal.split('-');
-     
+      
       const routes = [];
       const pDays = al.partnerDays || al.days;
-      const pTz = al.partnerTz || al.tz;
+      const pTz   = al.partnerTz || al.tz;
       const pHour = al.partnerHour !== undefined ? al.partnerHour : al.hour;
       const pConf = al.partnerConfirmed || false;
       const oConf = al.confirmed || false;
+
       routes.push({ type: 'own', name: "自家執飛航班(Own)", days: al.days, tz: al.tz, hour: al.hour, confirmed: oConf });
       routes.push({ type: 'partner', name: "外家/聯盟夥伴(Partner)", days: pDays, tz: pTz, hour: pHour, confirmed: pConf });
-      
+
       globalConfig = [];
       const resBox = document.getElementById('result-card');
       let resultHtml = "";
@@ -413,23 +414,19 @@
       routes.forEach((route, rIdx) => {
           const releaseDate = new Date(year, parseInt(month) - 1, day);
           releaseDate.setDate(releaseDate.getDate() - route.days);
-         
+          
           const rYear = releaseDate.getFullYear();
           const rMonth = releaseDate.getMonth();
           const rDay = releaseDate.getDate();
-         
+          
           const absoluteRelease = getTZTime(rYear, rMonth, rDay, route.tz === 'UTC' ? 'UTC' : route.tz, route.hour || 0);
-         
-          // === 修正重點：HQ 時間字串 ===
-          let hqStr = '';
+          
+          const prevLocalDay = new Date(releaseDate);
           if ((route.hour || 0) === 0) {
-            const prevLocalDay = new Date(releaseDate);
             prevLocalDay.setDate(releaseDate.getDate() - 1);
-            
-            hqStr = `${prevLocalDay.getFullYear()}-${pad(prevLocalDay.getMonth()+1)}-${pad(prevLocalDay.getDate())} 23:59:59<br>
-（即 ${rYear}-${pad(rMonth+1)}-${pad(rDay)} 凌晨 00:00）`;
+            var hqStr = `${prevLocalDay.getFullYear()}-${pad(prevLocalDay.getMonth()+1)}-${pad(prevLocalDay.getDate())} 23:59:59\n   (即 ${rYear}-${pad(rMonth+1)}-${pad(rDay)} 凌晨 00:00)`;
           } else {
-            hqStr = `${rYear}-${pad(rMonth+1)}-${pad(rDay)} 當地時間 ${pad(route.hour)}:00 整`;
+            var hqStr = `${rYear}-${pad(rMonth+1)}-${pad(rDay)} 當地時間 ${pad(route.hour)}:00 整`;
           }
 
           const twStr = formatToYMDHMS(absoluteRelease, 'Asia/Taipei');
@@ -438,27 +435,26 @@
           globalConfig.push({ departureVal, absoluteRelease, al, route });
 
           let hqLabel = route.tz === 'UTC' ? 'UTC' : route.tz.split('/')[1].replace('_',' ');
-         
-          let routeIcon = route.type === 'own' ? '✈️' : '🤝';
-          let blockStyle = route.type === 'own' ?
-            'border-top: 3px solid rgba(56, 189, 248, 0.4); background: linear-gradient(to bottom, rgba(56,189,248,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;' :
-            'border-top: 3px solid rgba(167, 139, 250, 0.4); background: linear-gradient(to bottom, rgba(167,139,250,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;';
           
-          if (rIdx === 0) {
-            blockStyle = blockStyle.replace('margin-top: 1.5rem;', 'margin-top: 0;');
-          }
+          let routeHeader = `✨ 航線規則：【${route.name}】\n`;
+          let routeIcon = route.type === 'own' ? '✈️' : '🤝';
+
+          let blockStyle = route.type === 'own' ? 
+            'border-top: 3px solid rgba(56, 189, 248, 0.4); background: linear-gradient(to bottom, rgba(56,189,248,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;' : 
+            'border-top: 3px solid rgba(167, 139, 250, 0.4); background: linear-gradient(to bottom, rgba(167,139,250,0.08), transparent); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;';
+
+          if (rIdx === 0) blockStyle = blockStyle.replace('margin-top: 1.5rem;', 'margin-top: 0;');
 
           resultHtml += `
 <div class="route-block" style="${blockStyle}">
-<pre>${routeIcon} ✨ 航線規則：【${route.name}】
---------------------------------------------------
+<pre>${routeIcon} ${routeHeader}--------------------------------------------------
 🎯 目標出發日期: ${departureVal}
 --------------------------------------------------
-📍 ${hqLabel} 當地 (HQ):
+📍 ${hqLabel} 當地 (HQ): 
    ${hqStr}
-📍 換算 台灣時間 (TW):
+📍 換算 台灣時間 (TW): 
    ${twStr}
-📍 換算 您的電腦時間:
+📍 換算 您的電腦時間: 
    ${localStr}</pre>
 <button class="btn-ics" onclick="handleGenerateICS(${rIdx})">📥 產生專屬行事曆提醒 (.ics檔)</button>
 </div>`;
